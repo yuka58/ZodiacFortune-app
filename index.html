@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>星座占いランキング</title>
+  <link href="https://fonts.googleapis.com/css2?family=Kokoro&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#f6f8fb;
+      --card:#ffffff;
+      --accent:#e5bbff;
+      --muted:#dde8ff;
+      --shadow: 0 6px 18px rgba(43, 52, 69, 0.08);
+      --radius:14px;
+      --gold: #f5b800;
+    }
+    
+    html,body{height:100%;margin:0;font-family:Inter, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;background:var(--bg);color:#0f172a}
+    
+    html, body {
+    height: 100%;
+    margin: 0;
+    font-family: Inter, "Kokoro", "Hiragino Kaku Gothic ProN", "游明朝", serif;
+
+    /* 背景画像の設定 */
+    background: url("images/background.jpg") no-repeat center center fixed;
+    background-size: cover;
+
+    /* 文字が読みやすいように半透明オーバーレイ */
+    position: relative;
+    }
+
+    /* 見出し（ランキングタイトルや詳細ページの星座名など）を太字に */
+    header h1,
+    main h1,
+    main h2 {
+      font-weight: 700; /* 太字 */
+    }
+
+    header h1 {
+      font-size: 28px;
+      color: #eee;
+    }
+
+    main h1 {
+      font-size: 24px;
+    }
+
+    main h2 {
+      font-size: 22px;
+      margin-bottom: 8px;
+      color: #eee;
+    }
+
+    header h1,
+    main h1 {
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.35); /* 35% 黒で暗くする */
+      z-index: -1;
+    }
+
+    header{padding:20px 24px;display:flex;align-items:center;gap:12px}
+    header h1{margin:0;font-size:20px}
+    main{padding:18px 24px;max-width:1100px;margin:0 auto}
+    
+    .grid {
+      display:flex;
+      flex-direction: column;
+      gap:12px;
+    }
+
+    /* カード */
+    .card{
+      background:var(--card);
+      padding:14px;
+      border-radius:12px;
+      box-shadow:var(--shadow);
+      display:flex;
+      align-items:center;
+      gap:12px;
+      cursor:pointer;
+      transition:transform .14s ease, box-shadow .14s ease;
+      width: 100%;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    .card:hover{ transform: translateY(-6px); box-shadow: 0 18px 36px rgba(43,52,69,0.12); }
+    .rank{
+      width:54px;height:54px;border-radius:10px;
+      display:flex;align-items:center;justify-content:center;
+      font-weight:700;font-size:18px;color:var(--card);
+      background: linear-gradient(135deg,var(--accent), #8a6cff);
+      box-shadow: 0 6px 18px rgba(107,140,255,0.16);
+      flex-shrink:0;
+    }
+    .meta{display:flex;flex-direction:column}
+    .sign{font-weight:700;font-size:16px}
+    .sub{font-size:13px;color:var(--muted)}
+
+    /* 詳細 */
+    #detailView{display:none}
+    .back { background:none;border:0;color:var(--accent);cursor:pointer;font-weight:600;margin-bottom:12px}
+    .fortune-card{
+      background:var(--card);padding:12px;border-radius:10px;box-shadow:var(--shadow);margin-bottom:10px;
+    }
+    .fortune-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+    .fortune-title{font-weight:700}
+    .stars{display:inline-flex;gap:4px}
+    .star{font-size:18px;opacity:.35}
+    .star.filled{opacity:1;color:var(--gold)}
+
+    .color-chip{display:inline-block;padding:6px 10px;border-radius:999px;font-weight:700;background:#eee;margin-left:6px}
+
+    /* 状態表示 */
+    .center{display:flex;align-items:center;justify-content:center;padding:40px;color:var(--muted)}
+    .error{color:#b91c1c;font-weight:600}
+
+    @media (max-width:520px){
+      header h1{font-size:16px}
+    }
+
+    /* 1〜3位の背景色とアイコン */
+    .rank-1 .rank {
+      background: linear-gradient(135deg, gold, orange);
+    }
+    .rank-1 .rank::after {
+      content: "🥇";
+      margin-left: 6px;
+    }
+
+    .rank-2 .rank {
+      background: linear-gradient(135deg, silver, #d0d0d0);
+    }
+    .rank-2 .rank::after {
+      content: "🥈";
+      margin-left: 6px;
+    }
+
+    .rank-3 .rank {
+      background: linear-gradient(135deg, #cd7f32, #b87333);
+    }
+    .rank-3 .rank::after {
+      content: "🥉";
+      margin-left: 6px;
+    }
+
+    /* 12位専用デザイン */
+    .rank-12 .rank {
+      background: linear-gradient(135deg, #555, #8d8d8d); /* 濃いグレー */
+      color: #fff;
+    }
+
+    .rank-12 .rank::after {
+      content: "🌀";
+      margin-left: 6px;
+    }
+
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🔮 星座占いランキング</h1>
+    <div style="margin-left:auto;color:var(--muted)">今月のランキングをチェック！</div>
+  </header>
+
+  <main>
+    <!-- ランキング -->
+    <section id="rankingView">
+      <h2 style="margin-top:0">月間ランキング</h2>
+      <div id="rankingContainer" class="grid"></div>
+      <div id="rankingState" class="center"></div>
+    </section>
+
+    <!-- 詳細 -->
+    <section id="detailView">
+      <button class="back" id="backBtn">← ランキングに戻る</button>
+      <div id="detailState" class="center"></div>
+      <div id="detailContent" style="display:none">
+        <h2 id="detailSign"></h2>
+        <div style="margin-bottom:12px;color:var(--muted)">順位: <span id="detailRank" style="font-weight:700"></span></div>
+
+        <div id="fortunes">
+          <!-- 各運勢カードが入る -->
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <script>
+     // --- 月ごとのランキング更新設定 ---
+    let currentMonth = new Date().getMonth() + 1;
+
+    // 1時間ごとに月が変わっていないかチェック
+    setInterval(() => {
+      const nowMonth = new Date().getMonth() + 1;
+      if (nowMonth !== currentMonth) {
+        currentMonth = nowMonth;
+        console.log("新しい月になったのでランキングを更新します");
+        fetchRanking(); // ランキング再取得
+      }
+    }, 60 * 60 * 1000); // 1時間ごと
+
+    // --- 設定 ---
+    const API_BASE = "http://localhost:3000";
+
+    // DOM
+    const rankingContainer = document.getElementById('rankingContainer');
+    const rankingState = document.getElementById('rankingState');
+    const detailView = document.getElementById('detailView');
+    const rankingView = document.getElementById('rankingView');
+    const detailState = document.getElementById('detailState');
+    const detailContent = document.getElementById('detailContent');
+    const detailSignEl = document.getElementById('detailSign');
+    const detailRankEl = document.getElementById('detailRank');
+    const fortunesEl = document.getElementById('fortunes');
+    const backBtn = document.getElementById('backBtn');
+
+    // ユーティリティ
+    function q( sel ){ return document.querySelector(sel) }
+
+    function create(tag, props={}, children=[]){
+      const el = document.createElement(tag);
+      for(const k in props) {
+        if(k === 'class') el.className = props[k];
+        else if(k === 'text') el.textContent = props[k];
+        else el.setAttribute(k, props[k]);
+      }
+      (Array.isArray(children)?children:[children]).flat().forEach(c => {
+        if(!c) return;
+        el.append(typeof c === 'string' ? document.createTextNode(c) : c);
+      });
+      return el;
+    }
+
+    function setView(view) {
+      if(view === 'ranking') {
+        rankingView.style.display = '';
+        detailView.style.display = 'none';
+        location.hash = '';
+      } else {
+        rankingView.style.display = 'none';
+        detailView.style.display = 'block';
+      }
+    }
+
+    // 星表示（"★★★☆☆" 形式の stars を受け取る）
+    function starsHTML(starStr) {
+      const n = (starStr.match(/★/g) || []).length;
+      const container = document.createElement('div'); container.className = 'stars';
+      for(let i=1;i<=5;i++){
+        const span = document.createElement('span');
+        span.className = 'star' + (i<=n ? ' filled' : '');
+        span.textContent = '★';
+        container.appendChild(span);
+      }
+      return container;
+    }
+
+    // API 呼び出し
+    async function fetchRanking() {
+      rankingContainer.innerHTML = '';
+      rankingState.textContent = '読み込み中...';
+      try {
+        const res = await fetch(`${API_BASE}/ranking`);
+        if(!res.ok) throw new Error('サーバーエラー');
+        const list = await res.json();
+        rankingState.textContent = '';
+        renderRanking(list);
+      } catch(err){
+        rankingState.innerHTML = '<div class="error">ランキング取得に失敗しました。サーバーが動作しているか確認してください。</div>';
+        console.error(err);
+      }
+    }
+
+    function renderRanking(list){
+      list.sort((a,b)=>a.rank-b.rank);
+      rankingContainer.innerHTML = '';
+      list.forEach(item => {
+        const c = create('div',{class:'card rank-' + item.rank});
+        const rankBox = create('div',{class:'rank'}, `${item.rank}`);
+        const meta = create('div',{class:'meta'});
+        meta.appendChild(create('div',{class:'sign', text: item.sign}));
+        meta.appendChild(create('div',{class:'sub', text: `クリックして詳細を見る`}));
+
+        c.appendChild(rankBox); c.appendChild(meta);
+        c.addEventListener('click', ()=> {
+          // ハッシュ遷移（エンコード）
+          location.hash = `#/sign/${encodeURIComponent(item.sign)}`;
+        });
+        rankingContainer.appendChild(c);
+      });
+      if(list.length === 0){
+        rankingState.textContent = 'ランキングデータがありません';
+      }
+    }
+
+    // 詳細取得
+    async function fetchResult(sign) {
+      console.log("fetchResult呼び出し:", sign);
+      detailState.textContent = '読み込み中...';
+      detailContent.style.display = 'none';
+      fortunesEl.innerHTML = '';
+      try{
+        const url = `${API_BASE}/result/${encodeURIComponent(sign)}`;
+        const res = await fetch(url);
+        if(!res.ok){
+          if(res.status === 404) throw new Error('星座が見つかりません');
+          throw new Error('サーバーエラー');
+        }
+        const obj = await res.json();
+        detailState.textContent = '';
+        renderDetail(obj);
+      }catch(err){
+        detailState.innerHTML = `<div class="error">詳細取得に失敗しました：${err.message}</div>`;
+        console.error(err);
+      }
+    }
+
+    function renderDetail(data) {
+      console.log("renderDetail呼び出し:", data);
+      detailContent.style.display = 'block';
+      detailSignEl.textContent = data.sign;
+      detailRankEl.textContent = `${data.rank}位`;
+
+      fortunesEl.innerHTML = '';
+      // general / love / money / work
+      const categories = [
+        {key:'general', title:'総合運'},
+        {key:'love', title:'恋愛運'},
+        {key:'money', title:'金運'},
+        {key:'work', title:'仕事運'}
+      ];
+      categories.forEach(cat => {
+        const f = data[cat.key];
+        const card = create('div',{class:'fortune-card'});
+        const head = create('div',{class:'fortune-head'});
+        head.appendChild( create('div',{class:'fortune-title', text: cat.title}) );
+        head.appendChild( starsHTML(f.stars) );
+        card.appendChild(head);
+        const text = create('div',{text: f.text});
+        card.appendChild(text);
+        fortunesEl.appendChild(card);
+      });
+
+      // ラッキーカラー
+      const colorBox = create('div',{class:'fortune-card'});
+      const head2 = create('div',{class:'fortune-head'});
+      head2.appendChild( create('div',{class:'fortune-title', text:'ラッキーカラー'}) );
+      head2.appendChild( create('div',{}, create('span',{class:'color-chip', text: data.color})) );
+      colorBox.appendChild(head2);
+      fortunesEl.appendChild(colorBox);
+
+      // スクロールトップ
+      window.scrollTo({top:0, behavior:'smooth'});
+    }
+
+    // ハッシュルーティング
+    console.log("handleHash:", location.hash);
+
+    function handleHash(){
+      const h = location.hash || '';
+      if(h.startsWith('#/sign/')){
+        const sign = decodeURIComponent(h.replace('#/sign/',''));
+        setView('detail');
+        fetchResult(sign);
+      } else {
+        setView('ranking');
+        fetchRanking();
+      }
+    }
+
+    // イベント
+    backBtn.addEventListener('click', ()=> { location.hash = '' });
+    window.addEventListener('hashchange', handleHash);
+
+    // 初期化
+    document.addEventListener('DOMContentLoaded', ()=> {
+      handleHash();
+    });
+  </script>
+</body>
+</html>
